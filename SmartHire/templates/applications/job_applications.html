@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Applications — {{ job.title }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">Applications: {{ job.title }}</h4>
+      <p class="text-muted mb-0">{{ job.get_company_name }} &bull; {{ applications.count }} applicants</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'job_detail' job.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-eye me-1"></i>View Job
+      </a>
+      <a href="{% url 'edit_job' job.pk %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil me-1"></i>Edit
+      </a>
+    </div>
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="card mb-4">
+    <div class="card-body p-3">
+      <div class="d-flex flex-wrap gap-2">
+        <a href="?" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          All ({{ applications.count }})
+        </a>
+        {% for v, l in status_choices %}
+        <a href="?status={{ v }}" class="btn btn-sm {% if status_filter == v %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+          {{ l }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th class="ps-4">Candidate</th>
+            <th>AI Match</th>
+            <th>Skills</th>
+            <th>Status</th>
+            <th>Applied</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+          <tr>
+            <td class="ps-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
+                  style="width:40px;height:40px;background:#1e3a5f;font-size:.9em">
+                  {{ app.applicant.first_name|first|upper }}{{ app.applicant.last_name|first|upper }}
+                </div>
+                <div>
+                  <div class="fw-bold">{{ app.applicant.get_full_name|default:app.applicant.username }}</div>
+                  <div class="small text-muted">{{ app.applicant.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-center">
+              <div class="fw-bold {% if app.match_score >= 70 %}text-success{% elif app.match_score >= 40 %}text-warning{% else %}text-danger{% endif %}"
+                style="font-size:1.2em">{{ app.match_score }}%</div>
+              <div class="progress mx-auto" style="height:5px;width:50px">
+                <div class="progress-bar {% if app.match_score >= 70 %}bg-success{% elif app.match_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                  style="width:{{ app.match_score }}%"></div>
+              </div>
+            </td>
+            <td>
+              {% if app.applicant.role == 'jobseeker' %}
+                {% for s in app.applicant.jobseeker_profile.get_skills_list|slice:":3" %}
+                <span class="skill-chip">{{ s }}</span>
+                {% empty %}—
+                {% endfor %}
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              <select class="form-select form-select-sm status-select" data-app-id="{{ app.pk }}" style="width:145px">
+                {% for v, l in status_choices %}
+                <option value="{{ v }}" {% if app.status == v %}selected{% endif %}>{{ l }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="small text-muted">{{ app.applied_at|timesince }} ago</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{% url 'application_detail' app.pk %}" class="btn btn-sm btn-outline-primary" title="Review">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'schedule_interview' app.pk %}" class="btn btn-sm btn-outline-success" title="Schedule Interview">
+                  <i class="bi bi-camera-video"></i>
+                </a>
+                {% if app.resume %}
+                <a href="{{ app.resume.url }}" class="btn btn-sm btn-outline-secondary" title="Resume" target="_blank">
+                  <i class="bi bi-download"></i>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="bi bi-people display-4 d-block mb-3"></i>No applications yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.status-select').forEach(sel => {
+  sel.addEventListener('change', function () {
+    const fd = new FormData();
+    fd.append('status', this.value);
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    fetch(`/applications/${this.dataset.appId}/status/`, { method: 'POST', body: fd })
+      .then(() => { this.style.background = '#d4edda'; setTimeout(() => this.style.background = '', 1200); });
+  });
+});
+</script>
+{% endblock %}

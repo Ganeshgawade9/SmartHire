@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Browse Jobs{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="row g-4">
+    <div class="col-md-3">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-funnel me-2"></i>Filter Jobs</h6>
+        <form method="get">
+          <div class="mb-3">{{ form.q.label_tag }}{{ form.q }}</div>
+          <div class="mb-3">{{ form.location.label_tag }}{{ form.location }}</div>
+          <div class="mb-3"><label class="form-label small fw-bold">Job Type</label>{{ form.job_type }}</div>
+          <div class="mb-3"><label class="form-label small fw-bold">Experience</label>{{ form.experience_level }}</div>
+          <div class="mb-3 form-check">{{ form.is_remote }}<label class="form-check-label ms-2">Remote Only</label></div>
+          <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+          <a href="{% url 'job_list' %}" class="btn btn-outline-secondary w-100 mt-2">Clear All</a>
+        </form>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-bold">{{ total_count }} Jobs Found</h5>
+        {% if user.is_authenticated and user.role == 'jobseeker' %}
+        <a href="{% url 'recommendations' %}" class="btn btn-sm btn-warning fw-bold"><i class="bi bi-stars me-1"></i>AI Picks</a>
+        {% endif %}
+        {% if user.is_authenticated and user.role == 'recruiter' %}
+        <a href="{% url 'post_job' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus me-1"></i>Post Job</a>
+        {% endif %}
+      </div>
+
+      {% for job in jobs %}
+      <div class="card job-card mb-3">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <div class="d-flex align-items-start gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+                  style="width:48px;height:48px;background:#1e3a5f;font-size:1.1em">
+                  {{ job.get_company_name|first|upper }}
+                </div>
+                <div>
+                  <h6 class="fw-bold mb-1">
+                    <a href="{% url 'job_detail' job.pk %}" class="text-decoration-none text-dark">{{ job.title }}</a>
+                  </h6>
+                  <div class="text-muted small">
+                    <span class="me-3"><i class="bi bi-building me-1"></i>{{ job.get_company_name }}</span>
+                    <span class="me-3"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+                    <span class="fw-bold">{{ job.get_salary_display }}</span>
+                  </div>
+                  <div class="mt-2">{% for s in job.get_skills_list|slice:":4" %}<span class="skill-chip">{{ s }}</span>{% endfor %}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+              <div class="mb-2">
+                <span class="badge bg-primary me-1">{{ job.get_job_type_display }}</span>
+                <span class="badge bg-secondary">{{ job.get_experience_level_display }}</span>
+                {% if job.is_remote %}<span class="badge bg-success ms-1">Remote</span>{% endif %}
+              </div>
+              <div class="d-flex gap-2 justify-content-md-end">
+                <a href="{% url 'job_detail' job.pk %}" class="btn btn-sm btn-primary">View & Apply</a>
+                {% if user.is_authenticated and user.role == 'jobseeker' %}
+                <button class="btn btn-sm {% if job.pk in saved_ids %}btn-warning{% else %}btn-outline-secondary{% endif %} save-btn"
+                  data-job-id="{{ job.pk }}">
+                  <i class="bi bi-bookmark{% if job.pk in saved_ids %}-fill{% endif %}"></i>
+                </button>
+                {% endif %}
+              </div>
+              <div class="text-muted small mt-1"><i class="bi bi-clock me-1"></i>{{ job.created_at|timesince }} ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="card"><div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-search display-4 d-block mb-3"></i>
+        <h5>No jobs found</h5><p>Try adjusting your filters.</p>
+      </div></div>
+      {% endfor %}
+
+      {% if jobs.has_other_pages %}
+      <nav class="mt-4"><ul class="pagination justify-content-center">
+        {% if jobs.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ jobs.previous_page_number }}">Previous</a></li>{% endif %}
+        {% for n in jobs.paginator.page_range %}
+          {% if jobs.number == n %}<li class="page-item active"><span class="page-link">{{ n }}</span></li>
+          {% elif n > jobs.number|add:'-3' and n < jobs.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ n }}">{{ n }}</a></li>{% endif %}
+        {% endfor %}
+        {% if jobs.has_next %}<li class="page-item"><a class="page-link" href="?page={{ jobs.next_page_number }}">Next</a></li>{% endif %}
+      </ul></nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.save-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    fetch(`/jobs/${this.dataset.jobId}/save/`,{method:'POST',headers:{'X-CSRFToken':getCookie('csrftoken')}})
+    .then(r=>r.json()).then(d=>{
+      const i=this.querySelector('i');
+      if(d.status==='saved'){this.classList.replace('btn-outline-secondary','btn-warning');i.classList.replace('bi-bookmark','bi-bookmark-fill');}
+      else{this.classList.replace('btn-warning','btn-outline-secondary');i.classList.replace('bi-bookmark-fill','bi-bookmark');}
+    });
+  });
+});
+</script>
+{% endblock %}

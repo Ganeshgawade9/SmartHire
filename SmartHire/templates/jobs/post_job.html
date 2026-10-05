@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}{% if job %}Edit Job{% else %}Post New Job{% endif %}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-9">
+      <div class="card p-4">
+        <h4 class="fw-bold mb-4">
+          <i class="bi bi-briefcase-fill me-2 text-primary"></i>
+          {% if job %}Edit: {{ job.title }}{% else %}Post a New Job{% endif %}
+        </h4>
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-bold">Job Title *</label>
+              {{ form.title }}
+              {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">{{ form.job_type.label_tag }}{{ form.job_type }}</div>
+            <div class="col-md-6">{{ form.experience_level.label_tag }}{{ form.experience_level }}</div>
+            <div class="col-md-8">{{ form.location.label_tag }}{{ form.location }}</div>
+            <div class="col-md-4 d-flex align-items-end pb-1">
+              <div class="form-check">{{ form.is_remote }}<label class="form-check-label ms-2">Remote Position</label></div>
+            </div>
+            <div class="col-md-4">{{ form.salary_min.label_tag }}{{ form.salary_min }}</div>
+            <div class="col-md-4">{{ form.salary_max.label_tag }}{{ form.salary_max }}</div>
+            <div class="col-md-4">{{ form.openings.label_tag }}{{ form.openings }}</div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Required Skills * <small class="fw-normal text-muted">(comma-separated: Python, Django, SQL)</small></label>
+              {{ form.skills_required }}
+              {% if form.skills_required.errors %}<div class="text-danger small">{{ form.skills_required.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">{{ form.description.label_tag }}{{ form.description }}</div>
+            <div class="col-12">{{ form.requirements.label_tag }}{{ form.requirements }}</div>
+            <div class="col-12">{{ form.responsibilities.label_tag }}{{ form.responsibilities }}</div>
+            <div class="col-md-6">{{ form.application_deadline.label_tag }}{{ form.application_deadline }}</div>
+            <div class="col-md-6">{{ form.status.label_tag }}{{ form.status }}</div>
+          </div>
+          <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check2-circle me-2"></i>{% if job %}Update Job{% else %}Post Job{% endif %}
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

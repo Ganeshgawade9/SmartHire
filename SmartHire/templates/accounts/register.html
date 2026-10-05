@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card p-4 shadow">
+        <div class="text-center mb-4">
+          <h3 class="fw-bold">Join SmartHire</h3>
+          <p class="text-muted">Create your free account</p>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="form-label fw-bold">I am a:</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="role" id="r_seeker" value="jobseeker" checked>
+                <label class="btn btn-outline-primary w-100 py-3" for="r_seeker">
+                  <i class="bi bi-person-badge d-block fs-3 mb-1"></i>Job Seeker
+                </label>
+              </div>
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="role" id="r_recruiter" value="recruiter">
+                <label class="btn btn-outline-primary w-100 py-3" for="r_recruiter">
+                  <i class="bi bi-building d-block fs-3 mb-1"></i>Recruiter
+                </label>
+              </div>
+            </div>
+          </div>
+          {% for f in form %}
+          {% if f.name != 'role' %}
+          <div class="mb-3">
+            {{ f.label_tag }}
+            {{ f }}
+            {% if f.errors %}<div class="text-danger small">{{ f.errors.0 }}</div>{% endif %}
+            {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+          </div>
+          {% endif %}
+          {% endfor %}
+          <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Create Account</button>
+        </form>
+        <hr>
+        <p class="text-center mb-0">Already registered? <a href="{% url 'login' %}">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

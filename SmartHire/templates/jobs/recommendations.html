@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}AI Recommendations{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1"><i class="bi bi-stars me-2 text-warning"></i>AI Job Recommendations</h4>
+      <p class="text-muted mb-0">Personalized jobs matched to your skills</p>
+    </div>
+    <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-gear me-1"></i>Update Skills</a>
+  </div>
+
+  {% if skill_gaps %}
+  <div class="card p-4 mb-4" style="border-left:4px solid #e74c3c">
+    <h6 class="fw-bold mb-2"><i class="bi bi-bar-chart me-2 text-danger"></i>Skill Gap Analysis — Top Missing Skills</h6>
+    <p class="text-muted small mb-3">These skills appear most in job postings but are missing from your profile.</p>
+    <div class="d-flex flex-wrap gap-2">
+      {% for skill, count in skill_gaps %}
+      <div class="p-2 border rounded d-flex align-items-center gap-2" style="background:#fff5f5">
+        <span class="fw-bold small">{{ skill|title }}</span>
+        <span class="badge bg-danger">{{ count }} jobs</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    {% for job in recommended_jobs %}
+    <div class="col-md-6">
+      <div class="card job-card h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between mb-2">
+            <div>
+              <h6 class="fw-bold mb-1"><a href="{% url 'job_detail' job.pk %}" class="text-decoration-none text-dark">{{ job.title }}</a></h6>
+              <p class="text-muted small mb-0">{{ job.get_company_name }}</p>
+            </div>
+            <span class="badge bg-warning text-dark" style="height:fit-content">AI Pick</span>
+          </div>
+          <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{ job.location }} &bull; {{ job.get_salary_display }}</p>
+          <div class="mb-3">{% for s in job.get_skills_list|slice:":5" %}<span class="skill-chip">{{ s }}</span>{% endfor %}</div>
+          <div class="d-flex gap-2">
+            <a href="{% url 'job_detail' job.pk %}" class="btn btn-sm btn-primary flex-grow-1">View & Apply</a>
+            <span class="badge bg-secondary align-self-center">{{ job.get_job_type_display }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card p-5 text-center">
+        <i class="bi bi-person-gear display-4 d-block mb-3 text-muted"></i>
+        <h5 class="text-muted">No recommendations yet</h5>
+        <p class="text-muted">Add skills to your profile to get personalized job recommendations.</p>
+        <a href="{% url 'profile' %}" class="btn btn-primary mt-2">Update Profile</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

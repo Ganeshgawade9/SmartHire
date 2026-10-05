@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Resume Builder | SmartHire{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/resume_builder.css' %}">
+
+<!-- Sticky Header Bar -->
+<div class="rb-header d-flex justify-content-between align-items-center">
+  <div class="d-flex align-items-center gap-3">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    <h5 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+      <i class="bi bi-file-earmark-person-fill fs-4"></i> AI Resume Builder
+    </h5>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-danger btn-sm" id="btn-download-pdf">
+      <i class="bi bi-file-pdf me-1"></i>Download PDF
+    </button>
+    <button class="btn btn-outline-primary btn-sm" id="btn-download-docx">
+      <i class="bi bi-file-word me-1"></i>Download DOCX
+    </button>
+    <button class="btn btn-primary btn-sm" id="btn-download-html">
+      <i class="bi bi-download me-1"></i>Download HTML
+    </button>
+  </div>
+</div>
+
+<div class="rb-builder-layout">
+  <!-- Left Column: Form Wizard -->
+  <div class="rb-form-column">
+    <!-- Step Navigation Pills -->
+    <div class="rb-steps-nav">
+      <button class="rb-step-btn active" data-step="1"><i class="bi bi-palette"></i> 1. Template</button>
+      <button class="rb-step-btn" data-step="2"><i class="bi bi-person"></i> 2. Personal</button>
+      <button class="rb-step-btn" data-step="3"><i class="bi bi-link-45deg"></i> 3. Links</button>
+      <button class="rb-step-btn" data-step="4"><i class="bi bi-card-text"></i> 4. Summary</button>
+      <button class="rb-step-btn" data-step="5"><i class="bi bi-briefcase"></i> 5. Experience</button>
+      <button class="rb-step-btn" data-step="6"><i class="bi bi-mortarboard"></i> 6. Education</button>
+      <button class="rb-step-btn" data-step="7"><i class="bi bi-tools"></i> 7. Skills</button>
+      <button class="rb-step-btn" data-step="8"><i class="bi bi-cpu"></i> 8. Projects</button>
+      <button class="rb-step-btn" data-step="9"><i class="bi bi-patch-check"></i> 9. Certs</button>
+      <button class="rb-step-btn" data-step="10"><i class="bi bi-trophy"></i> 10. Awards</button>
+      <button class="rb-step-btn" data-step="11"><i class="bi bi-translate"></i> 11. Languages</button>
+    </div>
+
+    <!-- Hidden CSRF Input -->
+    {% csrf_token %}
+
+    <!-- STEP 1: TEMPLATE SELECTION -->
+    <div class="form-step-section" data-step="1">
+      <div class="rb-card">
+        <h5 class="fw-bold mb-1"><i class="bi bi-palette me-2 text-primary"></i>Choose Resume Template</h5>
+        <p class="text-muted small mb-4">Select a design template. Matches your uploaded template designs 100%.</p>
+
+        <div class="row g-3">
+          <!-- Classic (Jake Ryan PDF 1) -->
+          <div class="col-md-4">
+            <div class="template-card-choice selected" data-template="classic">
+              <div class="template-badge-check"><i class="bi bi-check-lg"></i></div>
+              <div class="template-mini-preview t-mini-classic"></div>
+              <h6 class="fw-bold mb-1">⚫ Classic (Jake Ryan)</h6>
+              <p class="text-muted extra-small mb-0" style="font-size:0.75rem;">Famous LaTeX CS ATS design, full section underlines, categorized skills.</p>
+            </div>
+          </div>
+
+          <!-- Minimal (PDF 2) -->
+          <div class="col-md-4">
+            <div class="template-card-choice" data-template="minimal">
+              <div class="template-badge-check"><i class="bi bi-check-lg"></i></div>
+              <div class="template-mini-preview t-mini-minimal"></div>
+              <h6 class="fw-bold mb-1">⚪ Minimal</h6>
+              <p class="text-muted extra-small mb-0" style="font-size:0.75rem;">Monochrome icon contact row, dash bullets, two-column education with GPA.</p>
+            </div>
+          </div>
+
+          <!-- Modern Blue (Philip Empl PDF 3) -->
+          <div class="col-md-4">
+            <div class="template-card-choice" data-template="modern">
+              <div class="template-badge-check"><i class="bi bi-check-lg"></i></div>
+              <div class="template-mini-preview t-mini-modern"></div>
+              <h6 class="fw-bold mb-1">🟦 Modern Blue (Executive)</h6>
+              <p class="text-muted extra-small mb-0" style="font-size:0.75rem;">Executive 2-column sidebar, candidate photo, navy date badges, skill bars.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button class="btn btn-primary btn-next-step">Next: Personal Info <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: PERSONAL INFORMATION -->
+    <div class="form-step-section d-none" data-step="2">
+      <div class="rb-card">
+        <h5 class="fw-bold mb-3"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Personal Details</h5>
+        <div class="row g-3">
+          <!-- Photo Upload -->
+          <div class="col-12">
+            <label class="form-label small fw-bold">Profile Photo <span class="text-muted fw-normal">(Optional – used in Modern Blue template)</span></label>
+            <div class="d-flex align-items-center gap-3">
+              <div id="photo-preview-thumb" style="width:72px;height:72px;border-radius:50%;background:#e2e8f0;border:2px dashed #94a3b8;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+                <i class="bi bi-person-fill text-muted fs-3" id="photo-thumb-icon"></i>
+                <img id="photo-thumb-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Profile photo">
+              </div>
+              <div class="flex-grow-1">
+                <input type="file" id="photo-upload-input" class="form-control form-control-sm" accept="image/*">
+                <div class="form-text">JPG, PNG, WEBP – max 2MB. Displays in the 🟦 Modern Blue template sidebar.</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Full Name *</label>
+            <input type="text" class="form-control" data-state-key="full_name" placeholder="Jake Ryan">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Job Title / Headline</label>
+            <input type="text" class="form-control" data-state-key="headline" placeholder="Full Stack Software Engineer">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Email Address *</label>
+            <input type="email" class="form-control" data-state-key="email" placeholder="jake@su.edu">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Phone Number *</label>
+            <input type="text" class="form-control" data-state-key="phone" placeholder="123-456-7890">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Location (City, State / Country)</label>
+            <input type="text" class="form-control" data-state-key="location" placeholder="Georgetown, TX">
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Links <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: LINKS -->
+    <div class="form-step-section d-none" data-step="3">
+      <div class="rb-card">
+        <h5 class="fw-bold mb-3"><i class="bi bi-link-45deg me-2 text-primary"></i>Professional Links</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">LinkedIn URL</label>
+            <input type="text" class="form-control" data-state-key="linkedin" placeholder="linkedin.com/in/jake">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">GitHub URL</label>
+            <input type="text" class="form-control" data-state-key="github" placeholder="github.com/jake">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Portfolio / Website</label>
+            <input type="text" class="form-control" data-state-key="portfolio" placeholder="jake.dev">
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Summary <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: SUMMARY -->
+    <div class="form-step-section d-none" data-step="4">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="fw-bold mb-0"><i class="bi bi-card-text me-2 text-primary"></i>Professional Summary</h5>
+          <button class="btn btn-sm btn-outline-primary" id="btn-polish-summary">
+            <i class="bi bi-magic me-1"></i>AI Polish Summary
+          </button>
+        </div>
+        <p class="text-muted small mb-3">Write 2-4 sentences highlighting your background, key strengths, and technical goals.</p>
+        <textarea class="form-control" data-state-key="summary" rows="4" placeholder="Results-driven Software Engineer with expertise in..."></textarea>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Experience <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: WORK EXPERIENCE -->
+    <div class="form-step-section d-none" data-step="5">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-briefcase me-2 text-primary"></i>Work Experience</h5>
+          <button class="btn btn-sm btn-primary" id="add-exp-btn"><i class="bi bi-plus-lg me-1"></i>Add Position</button>
+        </div>
+        <div id="experience-list-container"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Education <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6: EDUCATION -->
+    <div class="form-step-section d-none" data-step="6">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-mortarboard me-2 text-primary"></i>Education</h5>
+          <button class="btn btn-sm btn-primary" id="add-edu-btn"><i class="bi bi-plus-lg me-1"></i>Add Education</button>
+        </div>
+        <div id="education-list-container"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Skills <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7: SKILLS -->
+    <div class="form-step-section d-none" data-step="7">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-tools me-2 text-primary"></i>Skills</h5>
+          <button class="btn btn-sm btn-primary" id="add-skill-cat-btn"><i class="bi bi-plus-lg me-1"></i>Add Skill Category</button>
+        </div>
+        <p class="text-muted small mb-3">Add or remove multiple skill categories and technical skills.</p>
+        
+        <div class="row g-3 mb-3">
+          <div class="col-12">
+            <label class="form-label small fw-bold">Languages</label>
+            <input type="text" class="form-control" data-state-key="skills_languages" placeholder="Java, Python, C/C++, SQL (Postgres), JavaScript, HTML/CSS, R">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Frameworks</label>
+            <input type="text" class="form-control" data-state-key="skills_frameworks" placeholder="React, Node.js, Flask, JUnit, WordPress, Material-UI, FastAPI">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Developer Tools</label>
+            <input type="text" class="form-control" data-state-key="skills_tools" placeholder="Git, Docker, TravisCI, Google Cloud Platform, VS Code">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Libraries</label>
+            <input type="text" class="form-control" data-state-key="skills_libraries" placeholder="pandas, NumPy, Matplotlib">
+          </div>
+        </div>
+
+        <div id="skills-custom-list-container"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Projects <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 8: PROJECTS + AI PROJECT ANALYZER -->
+    <div class="form-step-section d-none" data-step="8">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h5 class="fw-bold mb-1"><i class="bi bi-code-slash me-2 text-primary"></i>Projects</h5>
+            <p class="text-muted small mb-0">Add your top software engineering projects.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#analyzerModal">
+              <i class="bi bi-cpu me-1"></i>AI Project Analyzer
+            </button>
+            <button class="btn btn-sm btn-primary" id="add-project-btn"><i class="bi bi-plus-lg me-1"></i>Add Project</button>
+          </div>
+        </div>
+        <div id="project-list-container"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Certifications <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 9: CERTIFICATIONS -->
+    <div class="form-step-section d-none" data-step="9">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-patch-check me-2 text-primary"></i>Certifications</h5>
+          <button class="btn btn-sm btn-primary" id="add-cert-btn"><i class="bi bi-plus-lg me-1"></i>Add Certification</button>
+        </div>
+        <p class="text-muted small mb-3">Add or remove professional certifications and credentials.</p>
+        <div id="cert-list-container"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Awards <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 10: ACHIEVEMENTS & AWARDS -->
+    <div class="form-step-section d-none" data-step="10">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-trophy me-2 text-primary"></i>Achievements & Awards</h5>
+          <button class="btn btn-sm btn-primary" id="add-award-btn"><i class="bi bi-plus-lg me-1"></i>Add Award</button>
+        </div>
+        <p class="text-muted small mb-3">Add or remove hackathon wins, honors, or leadership recognitions.</p>
+        <div id="achievements-list-container"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-primary btn-next-step">Next: Languages <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 11: LANGUAGES -->
+    <div class="form-step-section d-none" data-step="11">
+      <div class="rb-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-translate me-2 text-primary"></i>Languages</h5>
+          <button class="btn btn-sm btn-primary" id="add-lang-btn"><i class="bi bi-plus-lg me-1"></i>Add Language</button>
+        </div>
+        <p class="text-muted small mb-3">Add or remove languages and proficiency levels.</p>
+        <div id="languages-list-container" class="mb-4"></div>
+
+        <div class="alert alert-success d-flex align-items-center gap-2">
+          <i class="bi bi-check-circle-fill fs-4"></i>
+          <div>Your resume is complete! Click <strong>Print &amp; Save PDF</strong> to generate and download your resume.</div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-outline-secondary btn-prev-step"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+          <button class="btn btn-success btn-lg" id="btn-print-save">
+            <i class="bi bi-printer me-2"></i>Print &amp; Save PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: ATS Score Widget ONLY (no live preview during editing) -->
+  <div class="rb-preview-column">
+    <div class="preview-stage-wrap">
+      <!-- ATS Score Box -->
+      <div class="ats-score-widget">
+        <div class="ats-top-row">
+          <div class="ats-circle" id="ats-circle-bar">
+            <span class="ats-score-text" id="ats-score-value">0%</span>
+          </div>
+          <div class="ats-text-block">
+            <h6 class="fw-bold text-white mb-1"><i class="bi bi-speedometer2 me-1" style="color:#3b82f6;"></i>ATS Optimization Score</h6>
+            <p>Real-time keyword matching, format compatibility &amp; section checks.</p>
+          </div>
+        </div>
+        <hr class="border-secondary my-2">
+        <ul class="list-unstyled mb-0" id="ats-suggestions-list"></ul>
+      </div>
+
+      <!-- Hint card shown during editing -->
+      <div class="rb-preview-hint mt-3 p-3 text-center" style="background:#fff;border-radius:12px;border:2px dashed #cbd5e1;">
+        <i class="bi bi-file-earmark-pdf text-primary" style="font-size:2.5rem;"></i>
+        <p class="mt-2 mb-1 fw-semibold text-dark">Resume Preview</p>
+        <p class="text-muted small mb-0">Fill in your details across all steps, then click <strong>Print &amp; Save PDF</strong> to generate and preview your final resume.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT PREVIEW FULLSCREEN MODAL -->
+<div id="print-preview-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.85); overflow-y:auto; padding:30px 20px;">
+  <div style="max-width:860px; margin:0 auto;">
+    <!-- Toolbar -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="text-white fw-bold mb-0"><i class="bi bi-file-earmark-check me-2"></i>Resume Preview</h5>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success" id="btn-do-print"><i class="bi bi-printer me-1"></i>Print / Save PDF</button>
+        <button class="btn btn-outline-primary" id="btn-download-html-overlay"><i class="bi bi-download me-1"></i>Download HTML</button>
+        <button class="btn btn-outline-secondary" id="btn-close-preview"><i class="bi bi-x-lg me-1"></i>Close</button>
+      </div>
+    </div>
+    <!-- Paper -->
+    <div style="background:#fff; border-radius:4px; box-shadow:0 20px 60px rgba(0,0,0,.4);">
+      <div id="resume-paper-preview" class="preview-paper tmpl-classic"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AI PROJECT ANALYZER MODAL -->
+<div class="modal fade" id="analyzerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-cpu text-primary me-2"></i>AI Project Analyzer</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted small mb-3">Upload your project README, paste project description, or enter a GitHub link. The AI will extract tech stacks, ATS bullets, and achievements.</p>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Project Name / Title</label>
+            <input type="text" id="analyzer-project-title" class="form-control" placeholder="Gitlytics">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">GitHub Repo Link (Optional)</label>
+            <input type="url" id="analyzer-github-url" class="form-control" placeholder="https://github.com/jake/gitlytics">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Upload File (README.md, .txt, source code)</label>
+            <input type="file" id="analyzer-file-input" class="form-control form-control-sm" accept=".md,.txt,.json,.py,.js">
+          </div>
+          <div class="col-12">
+            <label class="form-label small fw-bold">Or Paste Project README / Code Description</label>
+            <textarea id="analyzer-project-text" class="form-control" rows="4" placeholder="Paste README content or project architecture..."></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-100 mt-3 py-2 fw-bold" id="btn-analyze-project">
+          <i class="bi bi-cpu me-2"></i>Analyze Project with AI
+        </button>
+
+        <div id="analyzer-result-box" class="mt-4 p-3 bg-light rounded border d-none">
+          <h6 class="fw-bold text-primary mb-2"><i class="bi bi-magic me-1"></i>Extracted Analysis Results</h6>
+          
+          <div class="mb-2">
+            <label class="small fw-bold text-muted d-block mb-1">Identified Tech Stack:</label>
+            <div id="res-tech-badges"></div>
+          </div>
+
+          <div class="mb-2">
+            <label class="small fw-bold text-muted d-block mb-1">Generated ATS Action Bullets:</label>
+            <ul id="res-bullets" class="small text-dark ps-3"></ul>
+          </div>
+
+          <button class="btn btn-success w-100 fw-bold" id="btn-apply-analyzed">
+            <i class="bi bi-plus-circle me-2"></i>Apply to Resume Projects
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.INITIAL_RESUME_DATA = JSON.parse('{{ initial_json|escapejs }}');
+</script>
+<script src="{% static 'js/resume_builder.js' %}"></script>
+{% endblock %}

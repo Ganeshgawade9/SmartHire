@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-md-3 text-center">
+      <div class="card p-4">
+        <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold text-white"
+          style="width:100px;height:100px;background:#1e3a5f;font-size:2em">
+          {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        </div>
+        <h5 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h5>
+        <span class="badge bg-primary">{{ user.role|title }}</span>
+        {% if user.location %}<p class="text-muted small mt-2"><i class="bi bi-geo-alt me-1"></i>{{ user.location }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="card p-4">
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#personal">Personal Info</a></li>
+          {% if profile_form %}
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#prof">
+              {% if user.role == 'jobseeker' %}Career Profile{% else %}Company Info{% endif %}
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="personal">
+              <div class="row g-3">
+                {% for f in user_form %}
+                <div class="col-md-6">{{ f.label_tag }}{{ f }}</div>
+                {% endfor %}
+              </div>
+            </div>
+            {% if profile_form %}
+            <div class="tab-pane fade" id="prof">
+              <div class="row g-3">
+                {% for f in profile_form %}
+                <div class="col-md-6">
+                  {{ f.label_tag }}{{ f }}
+                  {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary mt-4 px-4">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

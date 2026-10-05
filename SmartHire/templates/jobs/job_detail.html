@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}{{ job.title }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-md-8">
+      <div class="card p-4 mb-4">
+        <h2 class="fw-bold mb-1">{{ job.title }}</h2>
+        <p class="text-muted mb-3"><i class="bi bi-building me-1"></i><strong>{{ job.get_company_name }}</strong></p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge bg-primary">{{ job.get_job_type_display }}</span>
+          <span class="badge bg-secondary">{{ job.get_experience_level_display }}</span>
+          {% if job.is_remote %}<span class="badge bg-success">Remote</span>{% endif %}
+          <span class="badge bg-info text-dark"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+        </div>
+        <div class="row g-3 mb-4 p-3 bg-light rounded">
+          <div class="col-6 col-md-3 text-center"><div class="fw-bold text-primary">{{ job.get_salary_display }}</div><div class="small text-muted">Salary</div></div>
+          <div class="col-6 col-md-3 text-center"><div class="fw-bold">{{ job.openings }}</div><div class="small text-muted">Openings</div></div>
+          <div class="col-6 col-md-3 text-center"><div class="fw-bold">{{ job.views_count }}</div><div class="small text-muted">Views</div></div>
+          <div class="col-6 col-md-3 text-center"><div class="fw-bold">{{ job.created_at|timesince }}</div><div class="small text-muted">Posted</div></div>
+        </div>
+        {% if job.description %}<h5 class="fw-bold mb-2">Description</h5><div class="mb-4" style="line-height:1.8">{{ job.description|linebreaks }}</div>{% endif %}
+        {% if job.responsibilities %}<h5 class="fw-bold mb-2">Responsibilities</h5><div class="mb-4" style="line-height:1.8">{{ job.responsibilities|linebreaks }}</div>{% endif %}
+        {% if job.requirements %}<h5 class="fw-bold mb-2">Requirements</h5><div class="mb-4" style="line-height:1.8">{{ job.requirements|linebreaks }}</div>{% endif %}
+        <h5 class="fw-bold mb-2">Required Skills</h5>
+        <div class="mb-3">{% for s in job.get_skills_list %}<span class="skill-chip">{{ s }}</span>{% endfor %}</div>
+        {% if job.application_deadline %}
+        <div class="alert alert-warning"><i class="bi bi-calendar-event me-2"></i>Deadline: <strong>{{ job.application_deadline }}</strong></div>
+        {% endif %}
+      </div>
+      {% if related_jobs %}
+      <div class="card p-4">
+        <h5 class="fw-bold mb-3">Similar Jobs</h5>
+        {% for rj in related_jobs %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <div><a href="{% url 'job_detail' rj.pk %}" class="fw-bold text-decoration-none">{{ rj.title }}</a>
+            <div class="small text-muted">{{ rj.get_company_name }} &bull; {{ rj.location }}</div></div>
+          <span class="badge bg-primary">{{ rj.get_job_type_display }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-md-4">
+      {% if match_result %}
+      <div class="card p-4 mb-4" style="border-top:4px solid {% if match_result.score >= 70 %}#27ae60{% elif match_result.score >= 40 %}#f39c12{% else %}#e74c3c{% endif %}">
+        <h6 class="fw-bold mb-3"><i class="bi bi-robot me-2"></i>AI Resume Match</h6>
+        <div class="text-center mb-3">
+          <div class="display-5 fw-bold {% if match_result.score >= 70 %}text-success{% elif match_result.score >= 40 %}text-warning{% else %}text-danger{% endif %}">{{ match_result.score }}%</div>
+          <span class="badge bg-{{ match_result.badge }}">{{ match_result.recommendation }}</span>
+        </div>
+        {% if match_result.matched %}<div class="mb-2"><small class="fw-bold text-success">✓ Matched:</small> {% for s in match_result.matched %}<span class="badge bg-success me-1">{{ s }}</span>{% endfor %}</div>{% endif %}
+        {% if match_result.missing %}<div><small class="fw-bold text-danger">✗ Missing:</small> {% for s in match_result.missing %}<span class="badge bg-danger me-1">{{ s }}</span>{% endfor %}</div>{% endif %}
+      </div>
+      {% endif %}
+
+      <div class="card p-4 mb-4">
+        {% if user.is_authenticated %}
+          {% if user.role == 'jobseeker' %}
+            {% if already_applied %}
+            <div class="alert alert-success mb-2"><i class="bi bi-check-circle me-2"></i>Already Applied!</div>
+            <a href="{% url 'my_applications' %}" class="btn btn-outline-primary w-100">My Applications</a>
+            {% else %}
+            <a href="{% url 'apply_job' job.pk %}" class="btn btn-primary btn-lg w-100 mb-2"><i class="bi bi-send me-2"></i>Apply Now</a>
+            <button class="btn btn-outline-secondary w-100 save-btn" data-job-id="{{ job.pk }}">
+              <i class="bi bi-bookmark{% if is_saved %}-fill{% endif %} me-1"></i>{% if is_saved %}Saved{% else %}Save Job{% endif %}
+            </button>
+            {% endif %}
+          {% elif user.role == 'recruiter' and user == job.recruiter %}
+          <a href="{% url 'job_applications' job.pk %}" class="btn btn-primary w-100 mb-2"><i class="bi bi-people me-2"></i>View Applications</a>
+          <a href="{% url 'edit_job' job.pk %}" class="btn btn-outline-primary w-100 mb-2"><i class="bi bi-pencil me-2"></i>Edit Job</a>
+          <form method="post" action="{% url 'delete_job' job.pk %}" onsubmit="return confirm('Delete this job?')">
+            {% csrf_token %}<button class="btn btn-outline-danger w-100"><i class="bi bi-trash me-2"></i>Delete</button>
+          </form>
+          {% endif %}
+        {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-lg w-100 mb-2">Login to Apply</a>
+        <a href="{% url 'register' %}" class="btn btn-outline-primary w-100">Create Account</a>
+        {% endif %}
+      </div>
+
+      {% if job.company %}
+      <div class="card p-4">
+        <h6 class="fw-bold mb-2">About Company</h6>
+        <h5>{{ job.company.company_name }}</h5>
+        {% if job.company.industry %}<p class="text-muted small">{{ job.company.industry }}</p>{% endif %}
+        {% if job.company.is_verified %}<span class="badge bg-success"><i class="bi bi-shield-check me-1"></i>Verified</span>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelectorAll('.save-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    fetch(`/jobs/${this.dataset.jobId}/save/`,{method:'POST',headers:{'X-CSRFToken':getCookie('csrftoken')}})
+    .then(r=>r.json()).then(d=>{
+      if(d.status==='saved'){this.innerHTML='<i class="bi bi-bookmark-fill me-1"></i>Saved';}
+      else{this.innerHTML='<i class="bi bi-bookmark me-1"></i>Save Job';}
+    });
+  });
+});
+</script>
+{% endblock %}

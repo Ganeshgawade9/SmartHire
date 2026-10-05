@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card p-4 shadow">
+        <div class="text-center mb-4">
+          <i class="bi bi-person-circle display-4 text-primary"></i>
+          <h3 class="fw-bold mt-2">Welcome Back</h3>
+          <p class="text-muted">Sign in to SmartHire</p>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          {% for f in form %}
+          <div class="mb-3">
+            {{ f.label_tag }}
+            {{ f }}
+            {% if f.errors %}<div class="text-danger small mt-1">{{ f.errors.0 }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Sign In</button>
+        </form>
+        <hr>
+        <p class="text-center mb-0">No account? <a href="{% url 'register' %}">Create one free</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

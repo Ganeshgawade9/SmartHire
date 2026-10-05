@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold">Admin Dashboard <span class="badge bg-danger ms-2">Admin</span></h4>
+    <a href="/admin/" class="btn btn-outline-dark btn-sm"><i class="bi bi-gear me-1"></i>Django Admin</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#1e3a5f,#2980b9)">
+        <div class="h2 fw-bold">{{ total_users }}</div>
+        <div><i class="bi bi-people me-1"></i>Total Users</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#27ae60,#2ecc71)">
+        <div class="h2 fw-bold">{{ active_jobs }}</div>
+        <div><i class="bi bi-briefcase me-1"></i>Active Jobs</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#8e44ad,#9b59b6)">
+        <div class="h2 fw-bold">{{ total_applications }}</div>
+        <div><i class="bi bi-file-earmark-person me-1"></i>Applications</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="background:linear-gradient(135deg,#e67e22,#f39c12)">
+        <div class="h2 fw-bold">{{ total_jobs }}</div>
+        <div><i class="bi bi-collection me-1"></i>Total Jobs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Charts -->
+    <div class="col-md-4">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3">Users by Role</h6>
+        <canvas id="roleChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3">Applications by Status</h6>
+        <canvas id="statusChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3">🔥 Top Skills in Demand</h6>
+        {% for skill, count in top_skills %}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="small">{{ skill|title }}</span>
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="width:70px;height:7px">
+              <div class="progress-bar bg-primary" style="width:{{ count }}0%"></div>
+            </div>
+            <span class="badge bg-light text-dark small">{{ count }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="col-md-6">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3">Recent Users</h6>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light"><tr><th>User</th><th>Role</th><th>Joined</th></tr></thead>
+            <tbody>
+              {% for u in recent_users %}
+              <tr>
+                <td>
+                  <div class="fw-bold">{{ u.get_full_name|default:u.username }}</div>
+                  <div class="small text-muted">{{ u.email }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-{% if u.role == 'admin' %}danger{% elif u.role == 'recruiter' %}primary{% else %}success{% endif %}">
+                    {{ u.role|title }}
+                  </span>
+                </td>
+                <td class="small text-muted">{{ u.date_joined|timesince }} ago</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Jobs -->
+    <div class="col-md-6">
+      <div class="card p-4">
+        <h6 class="fw-bold mb-3">Recent Jobs</h6>
+        {% for job in recent_jobs %}
+        <div class="d-flex justify-content-between py-2 border-bottom">
+          <div>
+            <a href="{% url 'job_detail' job.pk %}" class="fw-bold small text-decoration-none">{{ job.title }}</a>
+            <div class="small text-muted">{{ job.recruiter.username }} &bull; {{ job.created_at|date:"d M" }}</div>
+          </div>
+          <span class="badge {% if job.status == 'active' %}bg-success{% else %}bg-secondary{% endif %}">
+            {{ job.status|title }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('roleChart'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ role_labels|safe }},
+    datasets: [{ data: {{ role_values|safe }},
+      backgroundColor: ['#27ae60','#2980b9','#e74c3c'] }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+new Chart(document.getElementById('statusChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ status_labels|safe }},
+    datasets: [{ label: 'Count', data: {{ status_values|safe }},
+      backgroundColor: '#2980b9' }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+</script>
+{% endblock %}

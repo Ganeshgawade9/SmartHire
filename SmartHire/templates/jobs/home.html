@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<div style="background:linear-gradient(135deg,#1e3a5f 0%,#2980b9 100%);padding:80px 0 60px">
+  <div class="container text-center text-white">
+    <h1 class="display-4 fw-bold mb-3">Find Your Dream Job with <span style="color:#f1c40f">AI</span></h1>
+    <p class="lead mb-4 opacity-75">Smart matching · AI resume screening · Instant recommendations</p>
+    <form action="{% url 'job_list' %}" method="get" class="row g-2 justify-content-center" style="max-width:700px;margin:0 auto">
+      <div class="col-md-7"><input type="text" name="q" class="form-control form-control-lg" placeholder="Job title, skills, or company..."></div>
+      <div class="col-md-3"><input type="text" name="location" class="form-control form-control-lg" placeholder="Location"></div>
+      <div class="col-md-2"><button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">Search</button></div>
+    </form>
+    <p class="mt-3 opacity-75 small"><i class="bi bi-briefcase me-1"></i>{{ total_jobs }} active jobs available</p>
+  </div>
+</div>
+
+{% if popular_skills %}
+<div class="bg-white border-bottom py-3">
+  <div class="container">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="text-muted small fw-bold me-2">🔥 Trending:</span>
+      {% for skill in popular_skills %}
+      <a href="{% url 'job_list' %}?skill={{ skill }}" class="badge text-decoration-none"
+        style="background:#e8f0fe;color:#1e3a5f;font-size:.82em;padding:6px 12px;border-radius:20px">{{ skill|title }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="container my-5">
+  <div class="row g-4 text-center mb-5">
+    <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#1e3a5f,#2980b9)"><div class="display-6 fw-bold">{{ total_jobs }}+</div><div>Active Jobs</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#8e44ad,#9b59b6)"><div class="display-6 fw-bold">AI</div><div>Smart Matching</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#27ae60,#2ecc71)"><div class="display-6 fw-bold">ATS</div><div>Track Applications</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="background:linear-gradient(135deg,#e67e22,#f39c12)"><div class="display-6 fw-bold">FREE</div><div>Resume Builder</div></div></div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Latest Jobs</h2>
+    <a href="{% url 'job_list' %}" class="btn btn-outline-primary">View All <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-4">
+    {% for job in featured_jobs %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card job-card h-100">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between mb-3">
+            <div>
+              <h6 class="fw-bold mb-1">{{ job.title }}</h6>
+              <p class="text-muted small mb-0"><i class="bi bi-building me-1"></i>{{ job.get_company_name }}</p>
+            </div>
+            <span class="badge bg-primary" style="height:fit-content">{{ job.get_job_type_display }}</span>
+          </div>
+          <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</p>
+          <p class="text-muted small mb-3 fw-bold">{{ job.get_salary_display }}</p>
+          <div class="mb-3">{% for s in job.get_skills_list|slice:":3" %}<span class="skill-chip">{{ s }}</span>{% endfor %}</div>
+          <a href="{% url 'job_detail' job.pk %}" class="btn btn-sm btn-primary w-100">View Details</a>
+        </div>
+        <div class="card-footer bg-transparent border-0 px-4 pb-3">
+          <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ job.created_at|timesince }} ago</small>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-5">
+      <i class="bi bi-briefcase display-4 d-block mb-3"></i>
+      No jobs yet. <a href="{% url 'register' %}">Sign up as recruiter</a> to post the first one!
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="background:#1e3a5f" class="py-5">
+  <div class="container text-center text-white">
+    <h3 class="fw-bold mb-3">Ready to Get Hired?</h3>
+    <p class="opacity-75 mb-4">Join thousands finding their dream jobs on SmartHire</p>
+    <a href="{% url 'register' %}" class="btn btn-warning btn-lg fw-bold px-4 me-3">Create Free Account</a>
+    <a href="{% url 'job_list' %}" class="btn btn-outline-light btn-lg px-4">Browse Jobs</a>
+  </div>
+</div>
+{% endblock %}
