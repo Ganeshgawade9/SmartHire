@@ -12,8 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-smarthire-secret-key-change-in-production')
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ON_VERCEL = bool(os.environ.get('VERCEL'))
+DEBUG = os.environ.get('DEBUG', 'False' if ON_VERCEL else 'True') == 'True'
 
 # Cloudinary is used only when its env vars are set (Vercel). Locally, files go to /media/.
 USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_CLOUD_NAME'))
