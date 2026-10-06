@@ -1,16 +1,19 @@
 """
 SmartHire - AI Powered Job Portal
-Django Settings - Windows Compatible
+Django Settings - Windows Compatible + Vercel Ready
 """
 
 import os
 from pathlib import Path
 
+import dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-smarthire-secret-key-change-in-production'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-smarthire-secret-key-change-in-production')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ON_VERCEL = bool(os.environ.get('VERCEL'))
 
 ALLOWED_HOSTS = ['*']
 
@@ -31,6 +34,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,13 +63,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'smarthire.wsgi.application'
 
-# Database - stored in home directory to avoid permission issues
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': Path(os.path.expanduser('~')) / 'smarthire_db.sqlite3',
+# Database
+# Vercel's filesystem is read-only, so SQLite cannot work there.
+# On Vercel, set the DATABASE_URL environment variable (Neon / Supabase Postgres).
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.environ['DATABASE_URL'],
+            conn_max_age=0,
+            ssl_require=True,
+        )
     }
-}
+else:
+    # Local development fallback
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': Path(os.path.expanduser('~')) / 'smarthire_db.sqlite3',
+        }
+    }
+
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -83,8 +101,14 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Vercel is read-only except /tmp (uploads saved there are NOT permanent)
+MEDIA_ROOT = Path('/tmp/media') if ON_VERCEL else BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
