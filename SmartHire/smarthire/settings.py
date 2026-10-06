@@ -116,9 +116,9 @@ STORAGES = {
             else 'django.core.files.storage.FileSystemStorage'
         )
     },
-    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 }
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 MEDIA_URL = '/media/'
 # Vercel is read-only except /tmp (only used if Cloudinary is not configured)
 MEDIA_ROOT = Path('/tmp/media') if ON_VERCEL else BASE_DIR / 'media'
