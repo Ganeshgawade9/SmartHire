@@ -15,6 +15,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-smarthire-secret-key-
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ON_VERCEL = bool(os.environ.get('VERCEL'))
 
+# Cloudinary is used only when its env vars are set (Vercel). Locally, files go to /media/.
+USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_CLOUD_NAME'))
+
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -31,6 +34,10 @@ INSTALLED_APPS = [
     'notifications',
     'resume_builder',
 ]
+
+if USE_CLOUDINARY:
+    INSTALLED_APPS.insert(INSTALLED_APPS.index('django.contrib.staticfiles'), 'cloudinary_storage')
+    INSTALLED_APPS.append('cloudinary')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -102,13 +109,25 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
-    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'default': {
+        'BACKEND': (
+            'cloudinary_storage.storage.MediaCloudinaryStorage'
+            if USE_CLOUDINARY
+            else 'django.core.files.storage.FileSystemStorage'
+        )
+    },
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
 }
 
 MEDIA_URL = '/media/'
-# Vercel is read-only except /tmp (uploads saved there are NOT permanent)
+# Vercel is read-only except /tmp (only used if Cloudinary is not configured)
 MEDIA_ROOT = Path('/tmp/media') if ON_VERCEL else BASE_DIR / 'media'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
